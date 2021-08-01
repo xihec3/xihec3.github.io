@@ -24,3 +24,14 @@
 	transition: all 0.4s ease 0s;
 }
 
+.all_data_cont {
+        display:flex;
+}
+
+.data_cont {
+        display: block;
+}
+
+ul, li {
+  list-style-type: none;
+}
