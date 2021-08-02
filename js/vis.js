@@ -120,24 +120,41 @@ function showSlide() {
     }
   } else if (slide_num == 1) {
     clear();
-    document.getElementById("textDiv").innerHTML = "<h4>What are the prime years age Who won the most medals?</h4><p>In 2016 Olympics, Swimmer Michael Phelps won the 6 total medals on his journey to becoming the most decorated Olympian. He also holds the all-time records for Olympic gold medals with 23 gold medal winning.</p><p>Out of the 11,238 athletes participating in 306 events, 1857 got at least one medal.</p>"
-    selected_athletes.sort(function(a,b){return addMedal(b)- addMedal(a);});
-    show_athletes = selected_athletes.slice(0, 20);
-    show_athlete_names = show_athletes.map(d=>d.name);
-    show_athlete_count = show_athletes.map(d=>addMedal(d));
-    max_number = Math.max(...show_athlete_count);
+    document.getElementById("textDiv").innerHTML = "<h4>What are the prime years?</h4><p>Australian equestrian Mary Hanna, born in 1954, was the oldest competing Olympian. Nepalese swimmer Gaurika Singh was the youngest, aged only 14 in 2016.</p><p>In the right chart, you can select sports to explore what the 'prime years' for each sport are.</p>"
+    var age_map = new Map();
+    for (var i = 0; i < selected_athletes.length; i++) {
+        birth_year = selected_athletes[i].date_of_birth.substring(0,4);
+        age = 2016-parseInt(birth_year);
+        if (age_map.has(age)) {
+          existing = age_map.get(age);
+          age_map.set(age, {cnt: existing.cnt+1, gold: existing.gold + parseInt(selected_athletes[i].gold), silver: existing.silver + parseInt(selected_athletes[i].silver), bronze: existing.bronze + parseInt(selected_athletes[i].bronze)});
+        } else {
+          age_map.set(age, {cnt: 1, gold: parseInt(selected_athletes[i].gold), silver: parseInt(selected_athletes[i].silver), bronze: parseInt(selected_athletes[i].bronze)});
+        }
+    }
+
+    avg = [];
+    age_map.forEach((value, key) => 
+{
+  avg.push({age: key, gold: value.gold/value.cnt, silver: value.silver/value.cnt, bronze: value.bronze/value.cnt});
+});
+
+    avg.sort(function(a,b){return a.age - b.age;});
+    ages = avg.map(d=>d.age);
+    avg_added = avg.map(d=>d.gold+d.silver+d.bronze);
+    max_number = Math.max(...avg_added);
 
     svg = d3.select("svg")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
-    y = d3.scaleBand().domain(show_athlete_names).range([0, height]).padding(0.1);
+    y = d3.scaleBand().domain(ages).range([0, height]).padding(0.1);
     svg.append("g")
       .call(d3.axisLeft(y).tickSizeOuter(0));
 
     x = d3.scaleLinear().domain([0,max_number]).range([0, width]);
     svg.append("g")
        .attr("transform", "translate(0," + height + ")")
-       .call(d3.axisBottom(x).ticks(max_number+1).tickFormat(d3.format("d")));
+       .call(d3.axisBottom(x));
     
     var subgroups = ["gold", "silver", "bronze"];
     var color = d3.scaleOrdinal()
@@ -145,7 +162,7 @@ function showSlide() {
                   .range(['#fee101','#cccccc','#a05822']);
     var stackedData = d3.stack()
                         .keys(subgroups)
-                        (show_athletes)
+                        (avg)
     svg.append("g")
        .selectAll("g")
        .data(stackedData) // Enter in the stack data = loop athlete per athlete
@@ -155,12 +172,12 @@ function showSlide() {
          .data(function(d) { return d;} )  // // enter a second time = loop subgroup per subgroup
          .enter().append("rect")
          .attr("x", d => x(d[0]) + 2)
-         .attr("y", d => y(d.data.name))
+         .attr("y", d => y(d.data.age))
          .attr("height", y.bandwidth())
          .attr("width", d => x(d[1]) - x(d[0]));
 
     if (first_time) {
-      document.getElementById("graph").innerHTML += "<g><path class='annotation_line' d='M 410 340 L 480 400 L 650 400 M 410 410 L 480 400 M 410 458 L 480 400'/><text x='485' y='392' fill='black'>'Unluckiness'</text><text x='485' y='418' fill='black'>Some athletes got 3 medals</text><text x='485' y='433' fill='black'>but no gold medal.</text></g>" 
+      document.getElementById("graph").innerHTML += "<g><path class='annotation_line' d='M 700 480 L 600 350 L 430 350'/><text x='432' y='341' fill='black'>'Surprisingly...'</text><text x='432' y='366' fill='black'>For some people, 59 is</text><text x='432' y='382' fill='black'>a prime year for Olympics.</text></g>" 
       first_time = false;
     }
   } else if (slide_num == 2) {
