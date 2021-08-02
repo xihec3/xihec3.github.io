@@ -35,3 +35,10 @@
 ul, li {
   list-style-type: none;
 }
+
+.annotation_line {
+  stroke: red;
+  stroke-width: 4;
+  fill: none;
+  stroke-dasharray: 5,5;
+}
